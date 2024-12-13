@@ -1,43 +1,77 @@
+% Clear the workspace, removing all variables from the environment
 clear
+
+% Load data from the 'ExampleData.mat' file
 load('ExampleData.mat');
-lat=Position.latitude;
-lon=Position.longitude;
-positionDatetime=Position.Timestamp;
-Xacc = Acceleration.X;
-Yacc = Acceleration.Y;
-Zacc = Acceleration.Z;
-accelDatetime=Acceleration.Timestamp;
-% We use the following to obtain linear time data in seconds from a datetime array
-positionTime=timeElapsed(positionDatetime);
-accelTime=timeElapsed(accelDatetime);
 
-earthCirc = 24901;
-totaldis = 0;
+% Extract the latitude, longitude, and timestamp for position data from the Position structure
+lat = Position.latitude;                  % Latitude values from Position structure
+lon = Position.longitude;                 % Longitude values from Position structure
+positionDatetime = Position.Timestamp;    % Timestamps for position data
 
-for i = 1:(length(lat)-1)
-    lat1 = lat(i); % The first latitude
-    lat2 = lat(i+1); % The second latitude
-    lon1 = lon(i); % The first longitude
-    lon2 = lon(i+1); % The second longitude
-    degDis = distance(lat1, lon1, lat2, lon2);
-    dis = (degDis/360)*earthCirc;
-    totaldis = totaldis + dis;
+% Extract the X, Y, Z acceleration values and the timestamp for acceleration data from the Acceleration structure
+Xacc = Acceleration.X;                     % X-axis acceleration values
+Yacc = Acceleration.Y;                     % Y-axis acceleration values
+Zacc = Acceleration.Z;                     % Z-axis acceleration values
+accelDatetime = Acceleration.Timestamp;    % Timestamps for acceleration data
+
+% Convert datetime arrays to elapsed time in seconds from a reference time
+positionTime = timeElapsed(positionDatetime);   % Elapsed time for position data in seconds
+accelTime = timeElapsed(accelDatetime);         % Elapsed time for acceleration data in seconds
+
+% Define the Earth's circumference in miles
+earthCirc = 24901;                           % Earth's circumference in miles
+
+% Initialize total distance to zero
+totaldis = 0;                                % Variable to accumulate total distance traveled
+
+% Loop through each pair of consecutive position points
+for i = 1:(length(lat)-1)                   % Iterate over the latitude and longitude arrays
+    lat1 = lat(i);                          % The first latitude point
+    lat2 = lat(i+1);                        % The second latitude point
+    lon1 = lon(i);                          % The first longitude point
+    lon2 = lon(i+1);                        % The second longitude point
+    
+    % Calculate the distance in degrees between the two geographic points
+    degDis = distance(lat1, lon1, lat2, lon2);   % Distance in degrees between two lat-long points
+    
+    % Convert the degree distance to miles using Earth's circumference
+    dis = (degDis / 360) * earthCirc;            % Convert degree distance to miles
+    
+    % Add this segment's distance to the total distance
+    totaldis = totaldis + dis;                  % Update total distance traveled
 end
 
-stride = 2.5; % Average stride (ft)
-totaldis_ft = totaldis*5280; % Converting distance from miles to feet
-steps = totaldis_ft/stride;
+% Define an average stride length (in feet)
+stride = 2.5;                                % Average stride length in feet
 
-disp(['The total distance traveled is: ', num2str(totaldis),' miles'])
-disp(['You took ', num2str(steps) ' steps'])
+% Convert total distance from miles to feet (5280 feet in a mile)
+totaldis_ft = totaldis * 5280;                % Convert total distance to feet
 
-plot(accelTime,Xacc);
-hold on;
-plot(accelTime,Yacc);
-plot(accelTime,Zacc);
-xlim([0 50])
-legend('X Acceleration','Y Acceleration','Z Aceeleration');
-xlabel('Time (s)')
-ylabel('Acceleration (m/s^2)');
-title('Acceleration Data Vs. Time');
-hold off
+% Calculate the number of steps taken based on stride length
+steps = totaldis_ft / stride;                 % Calculate total steps taken
+
+% Display the total distance traveled in miles and the number of steps
+disp(['The total distance traveled is: ', num2str(totaldis), ' miles']);  % Print the distance in miles
+disp(['You took ', num2str(steps), ' steps']);  % Print the total steps
+
+% Plot the acceleration data (X, Y, Z components) against elapsed time
+plot(accelTime, Xacc);                        % Plot X acceleration vs. time
+hold on;                                      % Hold the plot to overlay additional plots
+plot(accelTime, Yacc);                        % Plot Y acceleration vs. time
+plot(accelTime, Zacc);                        % Plot Z acceleration vs. time
+
+% Set the x-axis limits for the plot (from 0 to 50 seconds)
+xlim([0 50]);                                 % Set x-axis range (0 to 50 seconds)
+
+% Add a legend to the plot to label the acceleration components
+legend('X Acceleration', 'Y Acceleration', 'Z Acceleration');  % Label the acceleration plots
+
+% Label the x-axis, y-axis, and set the plot title
+xlabel('Time (s)');                           % Label the x-axis as 'Time (s)'
+ylabel('Acceleration (m/s^2)');               % Label the y-axis as 'Acceleration (m/s^2)'
+title('Acceleration Data Vs. Time');          % Set the plot title
+
+% If you try and add more data to this graph it
+% will overwrite it instead of overlaying it
+hold off;
